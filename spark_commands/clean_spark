@@ -1,0 +1,7 @@
+kill $(cat /tmp/track_pid_script.pid)
+export HADOOP_DIR=/data/Mercury_workloads/spark_workloads/hadoop
+export SPARK_DIR=/data/Mercury_workloads/spark_workloads/spark
+
+$HADOOP_DIR/sbin/stop-all.sh
+$SPARK_DIR/sbin/stop-all.sh
+

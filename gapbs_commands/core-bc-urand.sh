@@ -1,0 +1,1 @@
+sudo numactl --physcpubind=28-48,84-104 ./bc-urand.sh

@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Check if the user provided the correct number of input arguments
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <search_string> <cg_idx>"
+    exit 1
+fi
+
+
+# Extract the input string from command-line argument
+search_string="$1"
+cg_idx="$2"
+# Initialize an empty set of tracked PIDs
+tracked_pids=""
+pid_count=0  # Counter to track the number of new PIDs
+
+# Create a PID file to store the PID of this script
+pidfile="/tmp/track_pid_script.pid"
+echo $$ > "$pidfile"
+
+# Define a function to clean up and exit gracefully
+cleanup() {
+    echo "Stopping script and cleaning up..."
+    exit 0  # Exit the script
+}
+
+# Trap SIGINT (Ctrl+C) and SIGTERM to run the cleanup function
+trap cleanup SIGINT SIGTERM
+
+echo "Started to track the PID for processes matching: '$search_string'"
+
+# Continuous monitoring for new PIDs based on the search string
+while true; do
+    # Get current PIDs matching the search string
+    current_pids=$(pgrep -f "$search_string")
+
+    # Iterate over each PID
+    for pid in $current_pids; do
+        # Check if the PID is already tracked
+        if ! grep -q "^$pid$" <<< "$tracked_pids"; then
+            # Append the new PID to the cgroup.procs file
+            echo "New PID detected: $pid" 
+            sudo bash -c "echo $pid >> /sys/fs/cgroup/cg$cg_idx/cgroup.procs"
+            
+            # Update the tracked PIDs set
+            tracked_pids="${tracked_pids}${pid}"$'\n'
+            echo "New PID added to tracking: $pid"
+            
+            # Increment the PID counter
+            pid_count=$((pid_count + 1))
+        fi
+    done
+
+
+done

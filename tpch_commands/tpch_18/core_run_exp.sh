@@ -1,0 +1,1 @@
+numactl --physcpubind=28-48,84-104 ./run_exp.sh
